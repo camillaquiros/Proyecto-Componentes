@@ -27,7 +27,7 @@ def get_db_connection():
             host="localhost",
             user="root",
             password="Pama2702",  # Cambiar por la contraseña de tu MySQL
-            database="citas_medicas"
+            database="GestionCitasMedicas"
         )
         return conn
     except mysql.connector.Error as e:
