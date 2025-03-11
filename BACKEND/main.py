@@ -24,14 +24,14 @@ def get_db_connection():
         conn = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="Pama2702",  # Cambia esto por tu contraseña de MySQL
+            password="Pama2702",  
             database="gestioncitasmedicas"
         )
         return conn
     except Error as e:
         raise HTTPException(status_code=500, detail=f"Error al conectar a MySQL: {e}")
 
-# Modelos Pydantic
+# Modelos 
 class Usuario(BaseModel):
     nombre: str
     apellido: str
@@ -74,7 +74,7 @@ def verificar_conexion():
     except Error as e:
         return {"error": str(e)}
 
-# ------------------ CRUD para Usuarios ------------------
+# CRUD  Usuarios 
 @app.get("/usuarios/", response_model=List[Usuario])
 def obtener_usuarios():
     conn = get_db_connection()
@@ -126,7 +126,7 @@ def eliminar_usuario(id_usuario: int):
     conn.close()
     return {"mensaje": "Usuario eliminado con éxito"}
 
-# ------------------ CRUD para Médicos ------------------
+# CRUD  Médicos 
 @app.get("/medicos/", response_model=List[Medico])
 def obtener_medicos():
     conn = get_db_connection()
@@ -173,7 +173,7 @@ def eliminar_medico(id_medico: int):
     conn.close()
     return {"mensaje": "Médico eliminado con éxito"}
 
-# ------------------ CRUD para Pacientes ------------------
+#  CRUD  Pacientes 
 @app.get("/pacientes/", response_model=List[Paciente])
 def obtener_pacientes():
     conn = get_db_connection()
