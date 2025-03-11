@@ -1,161 +1,179 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import mysql.connector
 from pydantic import BaseModel
+import mysql.connector
+from mysql.connector import Error
+from typing import List, Optional
+from fastapi.responses import JSONResponse
 import logging
-
-# Configurar logs
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Permitir peticiones desde el frontend
+# Configurar CORS para permitir solicitudes desde cualquier origen (útil para frontend)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Cambiar a dominios específicos en producción
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Conexión con MySQL
+# Conexión a MySQL
 def get_db_connection():
     try:
         conn = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="Pama2702",  # Cambiar por la contraseña de tu MySQL
-            database="GestionCitasMedicas"
+            password="Pama2702",  # Cambia esto por tu contraseña de MySQL
+            database="gestioncitasmedicas"  # Asegúrate de que coincide con el nombre correcto
         )
         return conn
-    except mysql.connector.Error as e:
-        logger.error(f"Error al conectar con la base de datos: {e}")
-        return None
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Error al conectar a MySQL: {e}")
 
-# Modelo de datos para citas médicas
+# Modelos Pydantic para la validación de datos
+class Usuario(BaseModel):
+    nombre: str
+    apellido: str
+    email: str
+    telefono: Optional[str]
+    contrasena: str
+    rol: str
+
+class Medico(BaseModel):
+    id_usuario: int
+    especialidad: str
+
+class Paciente(BaseModel):
+    id_usuario: int
+    fecha_nacimiento: str
+    historial_medico: Optional[str]
+
 class Cita(BaseModel):
-    nombre_paciente: str
-    fecha: str  # Formato "YYYY-MM-DD"
+    id_paciente: int
+    id_medico: int
+    fecha_hora: str
+    estado: Optional[str] = "Pendiente"
+    notas: Optional[str]
 
-# Página de bienvenida con formato mejorado
-@app.get("/", response_class=JSONResponse)
-def home():
-    return JSONResponse(content={
-        "mensaje": "Bienvenido a la API de gestión de citas médicas 🚀",
-        "endpoints": {
-            "Obtener citas": "/citas",
-            "Agregar cita": "/citas (POST)",
-            "Actualizar cita": "/citas/{id} (PUT)",
-            "Eliminar cita": "/citas/{id} (DELETE)"
-        }
-    })
+class HistorialConsulta(BaseModel):
+    id_paciente: int
+    id_cita: int
+    diagnostico: str
+    tratamiento: str
 
-# Obtener todas las citas
-@app.get("/citas", response_class=JSONResponse)
-def obtener_citas():
-    conn = get_db_connection()
-    if conn is None:
-        raise HTTPException(status_code=500, detail="Error al conectar con la base de datos")
-    
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM citas")
-    citas = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return JSONResponse(content={"citas": citas})
+class DisponibilidadMedico(BaseModel):
+    id_medico: int
+    dia_semana: str
+    hora_inicio: str
+    hora_fin: str
 
-# Obtener una cita específica por ID
-@app.get("/citas/{cita_id}", response_class=JSONResponse)
-def obtener_cita_por_id(cita_id: int):
-    conn = get_db_connection()
-    if conn is None:
-        raise HTTPException(status_code=500, detail="Error al conectar con la base de datos")
-
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM citas WHERE id = %s", (cita_id,))
-    cita = cursor.fetchone()
-    cursor.close()
-    conn.close()
-
-    if not cita:
-        raise HTTPException(status_code=404, detail="Cita no encontrada")
-    
-    return JSONResponse(content={"cita": cita})
-
-# Agregar una nueva cita
-@app.post("/citas", response_class=JSONResponse)
-def agregar_cita(cita: Cita):
-    conn = get_db_connection()
-    if conn is None:
-        raise HTTPException(status_code=500, detail="Error al conectar con la base de datos")
-    
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO citas (nombre_paciente, fecha) VALUES (%s, %s)", 
-                   (cita.nombre_paciente, cita.fecha))
-    conn.commit()
-    cita_id = cursor.lastrowid
-    cursor.close()
-    conn.close()
-    
-    return JSONResponse(content={"mensaje": "Cita agregada exitosamente", "id": cita_id}, status_code=201)
-
-# Actualizar una cita existente
-@app.put("/citas/{cita_id}", response_class=JSONResponse)
-def actualizar_cita(cita_id: int, cita: Cita):
-    conn = get_db_connection()
-    if conn is None:
-        raise HTTPException(status_code=500, detail="Error al conectar con la base de datos")
-    
-    cursor = conn.cursor()
-    cursor.execute("UPDATE citas SET nombre_paciente=%s, fecha=%s WHERE id=%s", 
-                   (cita.nombre_paciente, cita.fecha, cita_id))
-    conn.commit()
-    
-    if cursor.rowcount == 0:
-        cursor.close()
-        conn.close()
-        raise HTTPException(status_code=404, detail="Cita no encontrada")
-
-    cursor.close()
-    conn.close()
-    
-    return JSONResponse(content={"mensaje": "Cita actualizada exitosamente"})
-
-# Eliminar una cita
-@app.delete("/citas/{cita_id}", response_class=JSONResponse)
-def eliminar_cita(cita_id: int):
-    conn = get_db_connection()
-    if conn is None:
-        raise HTTPException(status_code=500, detail="Error al conectar con la base de datos")
-    
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM citas WHERE id=%s", (cita_id,))
-    conn.commit()
-    
-    if cursor.rowcount == 0:
-        cursor.close()
-        conn.close()
-        raise HTTPException(status_code=404, detail="Cita no encontrada")
-
-    cursor.close()
-    conn.close()
-    
-    return JSONResponse(content={"mensaje": "Cita eliminada exitosamente"})
-
+# Verificar conexión a la base de datos
 @app.get("/verificar-conexion")
 def verificar_conexion():
-    conn = get_db_connection()
-    if conn is None:
-        raise HTTPException(status_code=500, detail="❌ No se pudo conectar a MySQL")
-    
-    cursor = conn.cursor()
-    cursor.execute("SELECT DATABASE();")
-    db_name = cursor.fetchone()[0]
-    
-    cursor.close()
-    conn.close()
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT DATABASE()")
+        db_name = cursor.fetchone()
 
-    return {"mensaje": "✅ Conexión exitosa a MySQL", "base_de_datos": db_name}
+        # Imprimir en la consola para depuración
+        print("Nombre de la base de datos:", db_name)
+
+        conn.close()
+        
+        if db_name and db_name[0]:
+            return {"mensaje": "Conexión a la base de datos exitosa", "base_de_datos": db_name[0]}
+        else:
+            return {"mensaje": "Conexión a la base de datos exitosa, pero el nombre no se pudo obtener"}
+    
+    except Error as e:
+        return {"error": str(e)}
+
+# CRUD para Usuarios
+@app.get("/usuarios/", response_model=List[Usuario])
+def obtener_usuarios():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM usuarios")
+        usuarios = cursor.fetchall()
+        conn.close()
+        return usuarios
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener usuarios: {e}")
+
+@app.get("/usuarios/{id_usuario}", response_model=Usuario)
+def obtener_usuario(id_usuario: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM usuarios WHERE id_usuario = %s", (id_usuario,))
+        usuario = cursor.fetchone()
+        conn.close()
+        if usuario:
+            return usuario
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Error al buscar usuario: {e}")
+
+@app.post("/usuarios/")
+def crear_usuario(usuario: Usuario):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Verificar si el email ya está registrado
+        cursor.execute("SELECT id_usuario FROM usuarios WHERE email = %s", (usuario.email,))
+        if cursor.fetchone():
+            conn.close()
+            raise HTTPException(status_code=400, detail="El email ya está registrado")
+
+        sql = """
+        INSERT INTO usuarios (nombre, apellido, email, telefono, contrasena, rol)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        valores = (usuario.nombre, usuario.apellido, usuario.email, usuario.telefono, usuario.contrasena, usuario.rol)
+        
+        cursor.execute(sql, valores)
+        conn.commit()
+        conn.close()
+
+        return {"mensaje": "Usuario creado con éxito"}
+    
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Error al insertar usuario: {e}")
+
+@app.put("/usuarios/{id_usuario}")
+def actualizar_usuario(id_usuario: int, usuario: Usuario):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        sql = """
+        UPDATE usuarios SET nombre=%s, apellido=%s, email=%s, telefono=%s, contrasena=%s, rol=%s 
+        WHERE id_usuario=%s
+        """
+        valores = (usuario.nombre, usuario.apellido, usuario.email, usuario.telefono, usuario.contrasena, usuario.rol, id_usuario)
+        
+        cursor.execute(sql, valores)
+        conn.commit()
+        conn.close()
+
+        return {"mensaje": "Usuario actualizado con éxito"}
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Error al actualizar usuario: {e}")
+
+@app.delete("/usuarios/{id_usuario}")
+def eliminar_usuario(id_usuario: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM usuarios WHERE id_usuario = %s", (id_usuario,))
+        conn.commit()
+        conn.close()
+        return {"mensaje": "Usuario eliminado con éxito"}
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Error al eliminar usuario: {e}")
+
+# Puedes seguir la misma estructura para agregar endpoints de Médicos, Pacientes, Citas, HistorialConsultas, DisponibilidadMedicos
+
