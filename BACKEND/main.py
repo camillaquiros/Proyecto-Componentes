@@ -9,7 +9,7 @@ import logging
 
 app = FastAPI()
 
-# Configurar CORS para permitir solicitudes desde cualquier origen (útil para frontend)
+# Configurar CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,13 +25,13 @@ def get_db_connection():
             host="localhost",
             user="root",
             password="Pama2702",  # Cambia esto por tu contraseña de MySQL
-            database="gestioncitasmedicas"  # Asegúrate de que coincide con el nombre correcto
+            database="gestioncitasmedicas"
         )
         return conn
     except Error as e:
         raise HTTPException(status_code=500, detail=f"Error al conectar a MySQL: {e}")
 
-# Modelos Pydantic para la validación de datos
+# Modelos Pydantic
 class Usuario(BaseModel):
     nombre: str
     apellido: str
@@ -56,18 +56,6 @@ class Cita(BaseModel):
     estado: Optional[str] = "Pendiente"
     notas: Optional[str]
 
-class HistorialConsulta(BaseModel):
-    id_paciente: int
-    id_cita: int
-    diagnostico: str
-    tratamiento: str
-
-class DisponibilidadMedico(BaseModel):
-    id_medico: int
-    dia_semana: str
-    hora_inicio: str
-    hora_fin: str
-
 # Verificar conexión a la base de datos
 @app.get("/verificar-conexion")
 def verificar_conexion():
@@ -76,104 +64,158 @@ def verificar_conexion():
         cursor = conn.cursor()
         cursor.execute("SELECT DATABASE()")
         db_name = cursor.fetchone()
-
-        # Imprimir en la consola para depuración
-        print("Nombre de la base de datos:", db_name)
-
         conn.close()
-        
+
         if db_name and db_name[0]:
             return {"mensaje": "Conexión a la base de datos exitosa", "base_de_datos": db_name[0]}
         else:
-            return {"mensaje": "Conexión a la base de datos exitosa, pero el nombre no se pudo obtener"}
+            return {"mensaje": "Conexión exitosa, pero el nombre no se pudo obtener"}
     
     except Error as e:
         return {"error": str(e)}
 
-# CRUD para Usuarios
+# ------------------ CRUD para Usuarios ------------------
 @app.get("/usuarios/", response_model=List[Usuario])
 def obtener_usuarios():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM usuarios")
-        usuarios = cursor.fetchall()
-        conn.close()
-        return usuarios
-    except Error as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener usuarios: {e}")
-
-@app.get("/usuarios/{id_usuario}", response_model=Usuario)
-def obtener_usuario(id_usuario: int):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM usuarios WHERE id_usuario = %s", (id_usuario,))
-        usuario = cursor.fetchone()
-        conn.close()
-        if usuario:
-            return usuario
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    except Error as e:
-        raise HTTPException(status_code=500, detail=f"Error al buscar usuario: {e}")
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM usuarios")
+    usuarios = cursor.fetchall()
+    conn.close()
+    return usuarios
 
 @app.post("/usuarios/")
 def crear_usuario(usuario: Usuario):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Verificar si el email ya está registrado
-        cursor.execute("SELECT id_usuario FROM usuarios WHERE email = %s", (usuario.email,))
-        if cursor.fetchone():
-            conn.close()
-            raise HTTPException(status_code=400, detail="El email ya está registrado")
-
-        sql = """
-        INSERT INTO usuarios (nombre, apellido, email, telefono, contrasena, rol)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        """
-        valores = (usuario.nombre, usuario.apellido, usuario.email, usuario.telefono, usuario.contrasena, usuario.rol)
-        
-        cursor.execute(sql, valores)
-        conn.commit()
-        conn.close()
-
-        return {"mensaje": "Usuario creado con éxito"}
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
-    except Error as e:
-        raise HTTPException(status_code=500, detail=f"Error al insertar usuario: {e}")
+    cursor.execute("SELECT id_usuario FROM usuarios WHERE email = %s", (usuario.email,))
+    if cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=400, detail="El email ya está registrado")
+
+    sql = "INSERT INTO usuarios (nombre, apellido, email, telefono, contrasena, rol) VALUES (%s, %s, %s, %s, %s, %s)"
+    valores = (usuario.nombre, usuario.apellido, usuario.email, usuario.telefono, usuario.contrasena, usuario.rol)
+    
+    cursor.execute(sql, valores)
+    conn.commit()
+    conn.close()
+
+    return {"mensaje": "Usuario creado con éxito"}
 
 @app.put("/usuarios/{id_usuario}")
 def actualizar_usuario(id_usuario: int, usuario: Usuario):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        sql = """
-        UPDATE usuarios SET nombre=%s, apellido=%s, email=%s, telefono=%s, contrasena=%s, rol=%s 
-        WHERE id_usuario=%s
-        """
-        valores = (usuario.nombre, usuario.apellido, usuario.email, usuario.telefono, usuario.contrasena, usuario.rol, id_usuario)
-        
-        cursor.execute(sql, valores)
-        conn.commit()
-        conn.close()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    sql = "UPDATE usuarios SET nombre=%s, apellido=%s, email=%s, telefono=%s, contrasena=%s, rol=%s WHERE id_usuario=%s"
+    valores = (usuario.nombre, usuario.apellido, usuario.email, usuario.telefono, usuario.contrasena, usuario.rol, id_usuario)
+    
+    cursor.execute(sql, valores)
+    conn.commit()
+    conn.close()
 
-        return {"mensaje": "Usuario actualizado con éxito"}
-    except Error as e:
-        raise HTTPException(status_code=500, detail=f"Error al actualizar usuario: {e}")
+    return {"mensaje": "Usuario actualizado con éxito"}
 
 @app.delete("/usuarios/{id_usuario}")
 def eliminar_usuario(id_usuario: int):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM usuarios WHERE id_usuario = %s", (id_usuario,))
-        conn.commit()
-        conn.close()
-        return {"mensaje": "Usuario eliminado con éxito"}
-    except Error as e:
-        raise HTTPException(status_code=500, detail=f"Error al eliminar usuario: {e}")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM usuarios WHERE id_usuario = %s", (id_usuario,))
+    conn.commit()
+    conn.close()
+    return {"mensaje": "Usuario eliminado con éxito"}
 
-# Puedes seguir la misma estructura para agregar endpoints de Médicos, Pacientes, Citas, HistorialConsultas, DisponibilidadMedicos
+# ------------------ CRUD para Médicos ------------------
+@app.get("/medicos/", response_model=List[Medico])
+def obtener_medicos():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM medicos")
+    medicos = cursor.fetchall()
+    conn.close()
+    return medicos
 
+@app.post("/medicos/")
+def crear_medico(medico: Medico):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    sql = "INSERT INTO medicos (id_usuario, especialidad) VALUES (%s, %s)"
+    valores = (medico.id_usuario, medico.especialidad)
+    
+    cursor.execute(sql, valores)
+    conn.commit()
+    conn.close()
+
+    return {"mensaje": "Médico creado con éxito"}
+
+@app.put("/medicos/{id_medico}")
+def actualizar_medico(id_medico: int, medico: Medico):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    sql = "UPDATE medicos SET id_usuario=%s, especialidad=%s WHERE id_medico=%s"
+    valores = (medico.id_usuario, medico.especialidad, id_medico)
+    
+    cursor.execute(sql, valores)
+    conn.commit()
+    conn.close()
+
+    return {"mensaje": "Médico actualizado con éxito"}
+
+@app.delete("/medicos/{id_medico}")
+def eliminar_medico(id_medico: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM medicos WHERE id_medico = %s", (id_medico,))
+    conn.commit()
+    conn.close()
+    return {"mensaje": "Médico eliminado con éxito"}
+
+# ------------------ CRUD para Pacientes ------------------
+@app.get("/pacientes/", response_model=List[Paciente])
+def obtener_pacientes():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM pacientes")
+    pacientes = cursor.fetchall()
+    conn.close()
+    return pacientes
+
+@app.post("/pacientes/")
+def crear_paciente(paciente: Paciente):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    sql = "INSERT INTO pacientes (id_usuario, fecha_nacimiento, historial_medico) VALUES (%s, %s, %s)"
+    valores = (paciente.id_usuario, paciente.fecha_nacimiento, paciente.historial_medico)
+    
+    cursor.execute(sql, valores)
+    conn.commit()
+    conn.close()
+
+    return {"mensaje": "Paciente creado con éxito"}
+
+@app.put("/pacientes/{id_paciente}")
+def actualizar_paciente(id_paciente: int, paciente: Paciente):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    sql = "UPDATE pacientes SET id_usuario=%s, fecha_nacimiento=%s, historial_medico=%s WHERE id_paciente=%s"
+    valores = (paciente.id_usuario, paciente.fecha_nacimiento, paciente.historial_medico, id_paciente)
+    
+    cursor.execute(sql, valores)
+    conn.commit()
+    conn.close()
+
+    return {"mensaje": "Paciente actualizado con éxito"}
+
+@app.delete("/pacientes/{id_paciente}")
+def eliminar_paciente(id_paciente: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM pacientes WHERE id_paciente = %s", (id_paciente,))
+    conn.commit()
+    conn.close()
+    return {"mensaje": "Paciente eliminado con éxito"}
