@@ -225,14 +225,26 @@ def eliminar_medico(cedula: str):
     return {"mensaje": "Médico eliminado con éxito"}
 
 #  CRUD  Pacientes 
-@app.get("/pacientes/", response_model=List[Paciente])
+@app.get("/pacientes/", response_model=List[dict])
 def obtener_pacientes():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM pacientes")
-    pacientes = cursor.fetchall()
-    conn.close()
-    return pacientes
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Consulta corregida para incluir la cédula del usuario
+        cursor.execute("""
+            SELECT p.id_paciente, u.cedula, p.fecha_nacimiento, p.historial_medico 
+            FROM pacientes p
+            JOIN usuarios u ON p.id_usuario = u.id_usuario
+        """)
+        
+        pacientes = cursor.fetchall()
+        conn.close()
+        
+        return pacientes
+
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener pacientes: {e}")
 
 @app.post("/pacientes/{cedula}")
 def crear_paciente(cedula: str, fecha_nacimiento: str, historial_medico: Optional[str]):
