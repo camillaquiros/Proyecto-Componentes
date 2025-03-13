@@ -3,9 +3,13 @@ import { Link } from "react-scroll";
 import { FaLaptopMedical } from "react-icons/fa";
 import { AiOutlineClose, AiOutlineMenu } from "react-icons/ai";
 import ModalContacto from '../models/ModalContacto';
+import { useNavigate } from "react-router-dom";
+
 
 //NavBar (parte de arriba de la pagina)
 const Navbar = () => {
+
+    const navigate = useNavigate();
 
     const [menu, setMenu] = useState(false);
     const [showForm, setShowForm] = useState(false);
@@ -44,19 +48,20 @@ const Navbar = () => {
                             </Link>
                     </div>
 
-                    <nav className=' hidden lg:flex flex-row items-center text-lg font-medium gap-8'>
-                        <Link to='inicio' spy={true} smooth={true} duration={500} className='hover:text-hoverColor transition-all cursor-pointer'>Inicio</Link>
-                        <Link to='nosotros' spy={true} smooth={true} duration={500} className=' hover:text-hoverColor transition-all cursor-pointer'>Sobre Nosotros</Link>
-                        <Link to='servicios' spy={true} smooth={true} duration={500} className=' hover:text-hoverColor transition-all cursor-pointer'>Servicios</Link>
-                        <Link to='doctores' spy={true} smooth={true} duration={500} className='hover:text-hoverColor transition-all cursor-pointer'>Doctores</Link>
-                       
-                    </nav>
-                    <div className='hidden lg:flex'>
-                        <button className='bg-brightColor text-white px-4 py-2 rounded-md hover:bg-hoverColor transition duration-300 ease-in-out'
-                            onClick={openForm}>
-                            Registrate
+                   <nav className=' lg:flex flex-row items-center text-lg font-medium gap-8'>
+                   <Link to='inicio' spy={true} smooth={true} duration={500} className='hover:text-hoverColor transition-all cursor-pointer' onClick={closeMenu}>Inicio</Link>
+                    <Link to='nosotros' spy={true} smooth={true} duration={500} className=' hover:text-hoverColor transition-all cursor-pointer'onClick={closeMenu}>Sobre Nosotros</Link>
+                    <Link to='servicios' spy={true} smooth={true} duration={500} className=' hover:text-hoverColor transition-all cursor-pointer'onClick={closeMenu}>Servicios</Link>
+                    <Link to='doctores' spy={true} smooth={true} duration={500} className='hover:text-hoverColor transition-all cursor-pointer'onClick={closeMenu}>Doctores</Link>
+</nav>
+                    <div className="hidden lg:flex">
+                        <button
+                            className="bg-brightColor text-white px-4 py-2 rounded-md hover:bg-hoverColor transition duration-300 ease-in-out"
+                            onClick={() => navigate("/login")}
+                         >
+                             Registrate
                         </button>
-                    </div>
+                </div>
 
                     {showForm && <ModalContacto closeForm={closeForm} />}
                     <div className='lg:hidden flex items-center'>
@@ -75,9 +80,11 @@ const Navbar = () => {
                     <Link to='doctores' spy={true} smooth={true} duration={500} className='hover:text-hoverColor transition-all cursor-pointer'onClick={closeMenu}>Doctores</Link>
 
                     <div className='lg:hidden'>
-                        <button className='bg-brightColor text-white px-4 py-2 rounded-md hover:bg-hoverColor transition duration-300 ease-in-out'
-                        onClick={openForm}>
-                            Contactenos
+                    <button
+                            className="bg-brightColor text-white px-4 py-2 rounded-md hover:bg-hoverColor transition duration-300 ease-in-out"
+                            onClick={() => navigate("/LogIn")}
+                         >
+                             Registrate
                         </button>
                     </div>
                 </div>

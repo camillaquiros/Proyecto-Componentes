@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 import { Link } from 'react-scroll';
 
 const Inicio = () => {
@@ -13,19 +13,18 @@ const Inicio = () => {
         </p>
         <br />
         <Link 
-  to="servicios" 
-  spy={true} 
-  smooth={true} 
-  duration={500} 
-  className="bg-brightColor text-white px-4 py-3 rounded-md hover:bg-hoverColor transition duration-300 ease-in-out cursor-pointer"
->
-  Nuestros Servicios
-</Link>
+          to="servicios"  // Debe coincidir con el ID de la sección
+          spy={true} 
+          smooth={true} 
+          duration={500} 
+          offset={-50} // Ajusta para que no quede detrás del Navbar
+          className="bg-brightColor text-white px-4 py-3 rounded-md hover:bg-hoverColor transition duration-300 ease-in-out cursor-pointer"
+        >
+          Nuestros Servicios
+        </Link>
       </div>
     </div>
   );
 };
 
 export default Inicio;
-
-

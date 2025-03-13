@@ -4,7 +4,7 @@ import { FaHeartbeat, FaPills, FaUserMd } from 'react-icons/fa';
 
 const Servicios = () => {
     return (
-        <div className="bg-[#f5f5f5] flex flex-col justify-center lg:px-32 px-5 pt-24 lg:pt-20 pb-20">
+        <div id="servicios" className="bg-[#f5f5f5] flex flex-col justify-center lg:px-32 px-5 pt-24 lg:pt-20 pb-20">
             <div className='flex flex-col items-center lg:flex-row justify-between mb-8 lg:mb-6'>
                 <div>
                     <h1 className='text-4xl font-semibold text-center lg:text-start'>Nuestros Servicios</h1> 
@@ -12,11 +12,7 @@ const Servicios = () => {
                         En GoHealth, ofrecemos servicios médicos de calidad, diseñados para brindar bienestar y atención personalizada a cada paciente.
                     </p>
                 </div>
-                <div className='mt-4 lg:mt-0'>
-                    <button className="bg-brightColor text-white px-4 py-2 rounded-md hover:bg-hoverColor transition duration-300 ease-in-out">
-                        Ver Servicios
-                    </button>
-                </div>
+                
             </div>
             <div className='flex flex-col lg:flex-row gap-5 pt-8'>
                 <ServicioCard 
