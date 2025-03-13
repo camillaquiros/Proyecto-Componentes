@@ -56,6 +56,10 @@ class Cita(BaseModel):
     estado: Optional[str] = "Pendiente"
     notas: Optional[str]
 
+class LoginRequest(BaseModel):
+    email: str
+    contrasena: str
+
 # Verificar conexión a la base de datos
 @app.get("/verificar-conexion")
 def verificar_conexion():
@@ -73,6 +77,28 @@ def verificar_conexion():
     
     except Error as e:
         return {"error": str(e)}
+    
+
+# LOGIN
+@app.post("/login/")
+def login_usuario(login_data: LoginRequest):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Buscar el usuario por email
+    cursor.execute("SELECT contrasena FROM usuarios WHERE email = %s", (login_data.email,))
+    usuario = cursor.fetchone()
+    
+    conn.close()
+
+    if usuario:
+        # Comparar contraseñas
+        if usuario["contrasena"] == login_data.contrasena:
+            return {"mensaje": "Acceso aprobado"}
+        else:
+            raise HTTPException(status_code=401, detail="Credenciales inválidas")
+    else:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
 # CRUD  Usuarios 
 @app.get("/usuarios/", response_model=List[Usuario])
