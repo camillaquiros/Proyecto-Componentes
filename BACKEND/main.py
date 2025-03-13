@@ -131,13 +131,13 @@ def crear_usuario(usuario: Usuario):
 
     return {"mensaje": "Usuario creado con éxito"}
 
-@app.put("/usuarios/{id_usuario}")
-def actualizar_usuario(id_usuario: int, usuario: Usuario):
+@app.put("/usuarios/{cedula}")
+def actualizar_usuario(cedula: str, usuario: Usuario):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    sql = "UPDATE usuarios SET nombre=%s, apellido=%s, email=%s, telefono=%s, contrasena=%s, rol=%s, cedula=%s WHERE id_usuario=%s"
-    valores = (usuario.nombre, usuario.apellido, usuario.email, usuario.telefono, usuario.contrasena, usuario.rol, usuario.cedula, id_usuario)
+    sql = "UPDATE usuarios SET nombre=%s, apellido=%s, email=%s, telefono=%s, contrasena=%s, rol=%s WHERE cedula=%s"
+    valores = (usuario.nombre, usuario.apellido, usuario.email, usuario.telefono, usuario.contrasena, usuario.rol, cedula)
     
     cursor.execute(sql, valores)
     conn.commit()
@@ -145,11 +145,11 @@ def actualizar_usuario(id_usuario: int, usuario: Usuario):
 
     return {"mensaje": "Usuario actualizado con éxito"}
 
-@app.delete("/usuarios/{id_usuario}")
-def eliminar_usuario(id_usuario: int):
+@app.delete("/usuarios/{cedula}")
+def eliminar_usuario(cedula: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM usuarios WHERE id_usuario = %s", (id_usuario,))
+    cursor.execute("DELETE FROM usuarios WHERE cedula = %s", (cedula,))
     conn.commit()
     conn.close()
     return {"mensaje": "Usuario eliminado con éxito"}
@@ -164,13 +164,21 @@ def obtener_medicos():
     conn.close()
     return medicos
 
-@app.post("/medicos/")
-def crear_medico(medico: Medico):
+@app.post("/medicos/{cedula}")
+def crear_medico(cedula: str, especialidad: str):
     conn = get_db_connection()
     cursor = conn.cursor()
     
+    # Obtener el id_usuario a partir de la cédula
+    cursor.execute("SELECT id_usuario FROM usuarios WHERE cedula = %s", (cedula,))
+    usuario = cursor.fetchone()
+    
+    if not usuario:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
     sql = "INSERT INTO medicos (id_usuario, especialidad) VALUES (%s, %s)"
-    valores = (medico.id_usuario, medico.especialidad)
+    valores = (usuario[0], especialidad)
     
     cursor.execute(sql, valores)
     conn.commit()
@@ -178,13 +186,20 @@ def crear_medico(medico: Medico):
 
     return {"mensaje": "Médico creado con éxito"}
 
-@app.put("/medicos/{id_medico}")
-def actualizar_medico(id_medico: int, medico: Medico):
+@app.put("/medicos/{cedula}")
+def actualizar_medico(cedula: str, especialidad: str):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    sql = "UPDATE medicos SET id_usuario=%s, especialidad=%s WHERE id_medico=%s"
-    valores = (medico.id_usuario, medico.especialidad, id_medico)
+    cursor.execute("SELECT id_usuario FROM usuarios WHERE cedula = %s", (cedula,))
+    usuario = cursor.fetchone()
+    
+    if not usuario:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    sql = "UPDATE medicos SET especialidad=%s WHERE id_usuario=%s"
+    valores = (especialidad, usuario[0])
     
     cursor.execute(sql, valores)
     conn.commit()
@@ -192,11 +207,19 @@ def actualizar_medico(id_medico: int, medico: Medico):
 
     return {"mensaje": "Médico actualizado con éxito"}
 
-@app.delete("/medicos/{id_medico}")
-def eliminar_medico(id_medico: int):
+@app.delete("/medicos/{cedula}")
+def eliminar_medico(cedula: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM medicos WHERE id_medico = %s", (id_medico,))
+    
+    cursor.execute("SELECT id_usuario FROM usuarios WHERE cedula = %s", (cedula,))
+    usuario = cursor.fetchone()
+    
+    if not usuario:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    cursor.execute("DELETE FROM medicos WHERE id_usuario = %s", (usuario[0],))
     conn.commit()
     conn.close()
     return {"mensaje": "Médico eliminado con éxito"}
@@ -211,13 +234,20 @@ def obtener_pacientes():
     conn.close()
     return pacientes
 
-@app.post("/pacientes/")
-def crear_paciente(paciente: Paciente):
+@app.post("/pacientes/{cedula}")
+def crear_paciente(cedula: str, fecha_nacimiento: str, historial_medico: Optional[str]):
     conn = get_db_connection()
     cursor = conn.cursor()
     
+    cursor.execute("SELECT id_usuario FROM usuarios WHERE cedula = %s", (cedula,))
+    usuario = cursor.fetchone()
+    
+    if not usuario:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
     sql = "INSERT INTO pacientes (id_usuario, fecha_nacimiento, historial_medico) VALUES (%s, %s, %s)"
-    valores = (paciente.id_usuario, paciente.fecha_nacimiento, paciente.historial_medico)
+    valores = (usuario[0], fecha_nacimiento, historial_medico)
     
     cursor.execute(sql, valores)
     conn.commit()
@@ -225,13 +255,20 @@ def crear_paciente(paciente: Paciente):
 
     return {"mensaje": "Paciente creado con éxito"}
 
-@app.put("/pacientes/{id_paciente}")
-def actualizar_paciente(id_paciente: int, paciente: Paciente):
+@app.put("/pacientes/{cedula}")
+def actualizar_paciente(cedula: str, fecha_nacimiento: str, historial_medico: Optional[str]):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    sql = "UPDATE pacientes SET id_usuario=%s, fecha_nacimiento=%s, historial_medico=%s WHERE id_paciente=%s"
-    valores = (paciente.id_usuario, paciente.fecha_nacimiento, paciente.historial_medico, id_paciente)
+    cursor.execute("SELECT id_usuario FROM usuarios WHERE cedula = %s", (cedula,))
+    usuario = cursor.fetchone()
+    
+    if not usuario:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    sql = "UPDATE pacientes SET fecha_nacimiento=%s, historial_medico=%s WHERE id_usuario=%s"
+    valores = (fecha_nacimiento, historial_medico, usuario[0])
     
     cursor.execute(sql, valores)
     conn.commit()
@@ -239,11 +276,19 @@ def actualizar_paciente(id_paciente: int, paciente: Paciente):
 
     return {"mensaje": "Paciente actualizado con éxito"}
 
-@app.delete("/pacientes/{id_paciente}")
-def eliminar_paciente(id_paciente: int):
+@app.delete("/pacientes/{cedula}")
+def eliminar_paciente(cedula: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM pacientes WHERE id_paciente = %s", (id_paciente,))
+    
+    cursor.execute("SELECT id_usuario FROM usuarios WHERE cedula = %s", (cedula,))
+    usuario = cursor.fetchone()
+    
+    if not usuario:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    cursor.execute("DELETE FROM pacientes WHERE id_usuario = %s", (usuario[0],))
     conn.commit()
     conn.close()
     return {"mensaje": "Paciente eliminado con éxito"}
