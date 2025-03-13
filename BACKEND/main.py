@@ -61,6 +61,12 @@ class LoginRequest(BaseModel):
     email: str
     contrasena: str
 
+class Cita(BaseModel):
+    fecha_hora: str
+    estado: Optional[str] = "Pendiente"
+    notas: Optional[str]
+
+
 # Verificar conexión a la base de datos
 @app.get("/verificar-conexion")
 def verificar_conexion():
@@ -304,3 +310,114 @@ def eliminar_paciente(cedula: str):
     conn.commit()
     conn.close()
     return {"mensaje": "Paciente eliminado con éxito"}
+
+#CRUD CITAS
+
+@app.get("/citas/", response_model=List[dict])
+def obtener_citas():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT c.id_cita, u_p.cedula AS cedula_paciente, u_m.cedula AS cedula_medico, 
+                   c.fecha_hora, c.estado, c.notas 
+            FROM citas c
+            JOIN pacientes p ON c.id_paciente = p.id_paciente
+            JOIN usuarios u_p ON p.id_usuario = u_p.id_usuario
+            JOIN medicos m ON c.id_medico = m.id_medico
+            JOIN usuarios u_m ON m.id_usuario = u_m.id_usuario
+        """)
+
+        citas = cursor.fetchall()
+        conn.close()
+
+        return citas
+
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener citas: {e}")
+
+# Crear una nueva cita usando las cédulas del paciente y del médico
+@app.post("/citas/{cedula_paciente}/{cedula_medico}")
+def crear_cita(cedula_paciente: str, cedula_medico: str, cita: Cita):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Obtener id_paciente desde la cedula
+        cursor.execute("""
+            SELECT p.id_paciente FROM pacientes p
+            JOIN usuarios u ON p.id_usuario = u.id_usuario
+            WHERE u.cedula = %s
+        """, (cedula_paciente,))
+        paciente = cursor.fetchone()
+
+        if not paciente:
+            conn.close()
+            raise HTTPException(status_code=404, detail="Paciente no encontrado")
+
+        # Obtener id_medico desde la cedula
+        cursor.execute("""
+            SELECT m.id_medico FROM medicos m
+            JOIN usuarios u ON m.id_usuario = u.id_usuario
+            WHERE u.cedula = %s
+        """, (cedula_medico,))
+        medico = cursor.fetchone()
+
+        if not medico:
+            conn.close()
+            raise HTTPException(status_code=404, detail="Médico no encontrado")
+
+        # Insertar la nueva cita
+        sql = """
+            INSERT INTO citas (id_paciente, id_medico, fecha_hora, estado, notas)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        valores = (paciente[0], medico[0], cita.fecha_hora, cita.estado, cita.notas)
+
+        cursor.execute(sql, valores)
+        conn.commit()
+        conn.close()
+
+        return {"mensaje": "Cita creada con éxito"}
+
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Error al crear la cita: {e}")
+
+# Actualizar una cita por su ID
+@app.put("/citas/{id_cita}")
+def actualizar_cita(id_cita: int, cita: Cita):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        sql = """
+            UPDATE citas SET fecha_hora=%s, estado=%s, notas=%s
+            WHERE id_cita=%s
+        """
+        valores = (cita.fecha_hora, cita.estado, cita.notas, id_cita)
+
+        cursor.execute(sql, valores)
+        conn.commit()
+        conn.close()
+
+        return {"mensaje": "Cita actualizada con éxito"}
+
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Error al actualizar la cita: {e}")
+
+# Eliminar una cita por su ID
+@app.delete("/citas/{id_cita}")
+def eliminar_cita(id_cita: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM citas WHERE id_cita = %s", (id_cita,))
+        conn.commit()
+        conn.close()
+
+        return {"mensaje": "Cita eliminada con éxito"}
+
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Error al eliminar la cita: {e}")
