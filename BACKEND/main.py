@@ -39,6 +39,7 @@ class Usuario(BaseModel):
     telefono: Optional[str]
     contrasena: str
     rol: str
+    cedula: str  
 
 class Medico(BaseModel):
     id_usuario: int
@@ -115,13 +116,14 @@ def crear_usuario(usuario: Usuario):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT id_usuario FROM usuarios WHERE email = %s", (usuario.email,))
+    # Verificar si el email o la cédula ya existen
+    cursor.execute("SELECT id_usuario FROM usuarios WHERE email = %s OR cedula = %s", (usuario.email, usuario.cedula))
     if cursor.fetchone():
         conn.close()
-        raise HTTPException(status_code=400, detail="El email ya está registrado")
+        raise HTTPException(status_code=400, detail="El email o la cédula ya están registrados")
 
-    sql = "INSERT INTO usuarios (nombre, apellido, email, telefono, contrasena, rol) VALUES (%s, %s, %s, %s, %s, %s)"
-    valores = (usuario.nombre, usuario.apellido, usuario.email, usuario.telefono, usuario.contrasena, usuario.rol)
+    sql = "INSERT INTO usuarios (nombre, apellido, email, telefono, contrasena, rol, cedula) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    valores = (usuario.nombre, usuario.apellido, usuario.email, usuario.telefono, usuario.contrasena, usuario.rol, usuario.cedula)
     
     cursor.execute(sql, valores)
     conn.commit()
@@ -134,8 +136,8 @@ def actualizar_usuario(id_usuario: int, usuario: Usuario):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    sql = "UPDATE usuarios SET nombre=%s, apellido=%s, email=%s, telefono=%s, contrasena=%s, rol=%s WHERE id_usuario=%s"
-    valores = (usuario.nombre, usuario.apellido, usuario.email, usuario.telefono, usuario.contrasena, usuario.rol, id_usuario)
+    sql = "UPDATE usuarios SET nombre=%s, apellido=%s, email=%s, telefono=%s, contrasena=%s, rol=%s, cedula=%s WHERE id_usuario=%s"
+    valores = (usuario.nombre, usuario.apellido, usuario.email, usuario.telefono, usuario.contrasena, usuario.rol, usuario.cedula, id_usuario)
     
     cursor.execute(sql, valores)
     conn.commit()
