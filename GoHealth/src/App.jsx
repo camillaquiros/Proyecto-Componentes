@@ -1,23 +1,24 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Inicio from "./components/Inicio";
 import Nosotros from "./components/Nosotros";
 import Servicios from "./components/Servicios";
 import Doctores from "./components/Doctores";
-import LogIn from "./LogIn"; // Importa correctamente
+import LogIn from "./LogIn"; 
+import Registro from "./Registro"; 
 
 const Layout = ({ children }) => {
   const location = useLocation();
-  const isLoginPage = location.pathname === "/LogIn"; // Detecta si estamos en /login
+  const isAuthPage = location.pathname === "/LogIn" || location.pathname === "/Registro";
 
   return (
     <>
-      {!isLoginPage && <Navbar />} {/* Oculta Navbar en /login */}
-      <main>{children}</main>
-      {!isLoginPage && <Footer />} {/* Oculta Footer en /login */}
-    </>
+    {!isAuthPage && <Navbar />}
+    <main>{children}</main>
+    {!isAuthPage && <Footer />}
+  </>
   );
 };
 
@@ -35,11 +36,14 @@ const App = () => {
     <Router>
       <Layout>
         <Routes>
-          <Route path="/" element={<HomePage/>} />
+        <Route path="/" element={<Navigate to="/Home" />} />
+          <Route path="/home" element={<HomePage/>} />
           <Route path="/nosotros" element={<Nosotros/>} />
           <Route path="/servicios" element={<Servicios/>} />
           <Route path="/doctores" element={<Doctores/>} />
           <Route path="/login" element={<LogIn/>} />
+          <Route path="/registro" element={<Registro/>} />
+          <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
         </Routes>
       </Layout>
     </Router>

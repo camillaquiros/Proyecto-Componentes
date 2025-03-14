@@ -79,7 +79,7 @@ const Doctores = () => {
     };
 
   return (
-    <div className="bg-[#f5f5f5] flex flex-col justify-center lg:px-32 px-5 pt-20 lg:pt-16 pb-16">
+    <div id = 'doctores' className="bg-[#f5f5f5] flex flex-col justify-center lg:px-32 px-5 pt-20 lg:pt-16 pb-16">
         <div className="flex flex-col items-center lg:flex-row justify-between mb-8 lg:mb-6">
             <div>
                 <h1 className="text-4xl font-semibold text-center lg:text-start">Nuestros Doctores</h1>
@@ -102,7 +102,7 @@ const Doctores = () => {
         <div className="mt-5">
           <Slider ref={slider} {...settings}>
             {data.map((e , index) => (
-              <div className="h-[420px] text-black rounded-xl shadow-lg mb-2 cursor-pointer"
+              <div className="h-[380px] text-black rounded-xl shadow-lg mb-2 cursor-pointer"
               key={index}>
                 <div>
                   <img src={e.img} alt={e.name} className="h-50 rounded-t-xl w-full"/>

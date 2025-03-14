@@ -3,7 +3,7 @@ import img from "../assets/img/si.jpg"
 
 const Nosotros = () => {
   return (
-    <div className="bg-[#f5f5f5] flex flex-col lg:flex-row justify-between items-center lg:px-32 px-5 pt-24 lg:pt-20 gap-10 pb-20">
+    <div id = 'nosotros'  className="bg-[#f5f5f5] flex flex-col lg:flex-row justify-between items-center lg:px-32 px-5 pt-24 lg:pt-20 gap-10 pb-20">
         <div className='w-full lg:w-3/4 space-y-6'>
             <h1 className="text-4xl font-semibold text-center lg:text-start">Sobre Nosotros</h1>
             <p className="text-justify lg:text-start">

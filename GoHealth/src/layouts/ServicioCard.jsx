@@ -10,7 +10,7 @@ const ServicioCard = ({ icon, title, description }) => {
         <p className="text-center">
             {description}
         </p>
-        <h3 className='text-backgroundColor cursor-pointer hover:text-[#004949] transition duration-300 ease-in-out'>Leer más</h3>
+        
     </div>
   );
 };
