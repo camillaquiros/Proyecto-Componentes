@@ -43,7 +43,7 @@ const Navbar = () => {
                     <div className='flex flex-row items-center cursor-pointer'>
                         <Link to='home' spy={true} smooth={true} duration={500}>
                             <h1 className="text-2xl font-semibold flex items-center gap-2">
-                                <FaLaptopMedical /> GoHealth
+                                <FaLaptopMedical/> GoHealth
                             </h1>           
                             </Link>
                     </div>
@@ -57,7 +57,7 @@ const Navbar = () => {
                     <div className="hidden lg:flex">
                         <button
                             className="bg-brightColor text-white px-4 py-2 rounded-md hover:bg-hoverColor transition duration-300 ease-in-out"
-                            onClick={() => navigate("/login")}
+                            onClick={() => navigate("/LogIn")}
                          >
                              Registrate
                         </button>
