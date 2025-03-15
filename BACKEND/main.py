@@ -108,11 +108,11 @@ def login_usuario(login_data: LoginRequest):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
 # CRUD  Usuarios 
-@app.get("/usuarios/", response_model=List[Usuario])
+@app.get("/usuarios/", response_model=List[dict])
 def obtener_usuarios():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM usuarios")
+    cursor.execute("SELECT id_usuario, nombre, apellido, email, telefono, rol, cedula FROM usuarios")
     usuarios = cursor.fetchall()
     conn.close()
     return usuarios
@@ -161,11 +161,17 @@ def eliminar_usuario(cedula: str):
     return {"mensaje": "Usuario eliminado con éxito"}
 
 # CRUD  Médicos 
-@app.get("/medicos/", response_model=List[Medico])
+@app.get("/medicos/", response_model=List[dict])
 def obtener_medicos():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM medicos")
+
+    cursor.execute("""
+        SELECT m.id_medico, u.cedula, u.nombre, u.apellido, m.especialidad
+        FROM medicos m
+        JOIN usuarios u ON m.id_usuario = u.id_usuario
+    """)
+
     medicos = cursor.fetchall()
     conn.close()
     return medicos
@@ -320,7 +326,8 @@ def obtener_citas():
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute("""
-            SELECT c.id_cita, u_p.cedula AS cedula_paciente, u_m.cedula AS cedula_medico, 
+            SELECT c.id_cita, u_p.cedula AS cedula_paciente, u_p.nombre AS nombre_paciente, 
+                   u_m.cedula AS cedula_medico, u_m.nombre AS nombre_medico, 
                    c.fecha_hora, c.estado, c.notas 
             FROM citas c
             JOIN pacientes p ON c.id_paciente = p.id_paciente
