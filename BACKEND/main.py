@@ -117,6 +117,20 @@ def obtener_usuarios():
     conn.close()
     return usuarios
 
+@app.get("/usuarios/{cedula}")
+def obtener_usuario_por_cedula(cedula: str):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute("SELECT id_usuario, nombre, apellido, email, telefono, rol, cedula FROM usuarios WHERE cedula = %s", (cedula,))
+    usuario = cursor.fetchone()
+    conn.close()
+    
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    return usuario
+
 @app.post("/usuarios/")
 def crear_usuario(usuario: Usuario):
     conn = get_db_connection()
@@ -175,6 +189,26 @@ def obtener_medicos():
     medicos = cursor.fetchall()
     conn.close()
     return medicos
+
+@app.get("/medicos/{cedula}")
+def obtener_medico_por_cedula(cedula: str):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT m.id_medico, u.cedula, u.nombre, u.apellido, m.especialidad
+        FROM medicos m
+        JOIN usuarios u ON m.id_usuario = u.id_usuario
+        WHERE u.cedula = %s
+    """, (cedula,))
+
+    medico = cursor.fetchone()
+    conn.close()
+
+    if not medico:
+        raise HTTPException(status_code=404, detail="Médico no encontrado")
+
+    return medico
 
 @app.post("/medicos/{cedula}")
 def crear_medico(cedula: str, especialidad: str):
@@ -239,24 +273,38 @@ def eliminar_medico(cedula: str):
 #  CRUD  Pacientes 
 @app.get("/pacientes/", response_model=List[dict])
 def obtener_pacientes():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
 
-        # Consulta corregida para incluir la cédula del usuario
-        cursor.execute("""
-            SELECT p.id_paciente, u.cedula, p.fecha_nacimiento, p.historial_medico 
-            FROM pacientes p
-            JOIN usuarios u ON p.id_usuario = u.id_usuario
-        """)
-        
-        pacientes = cursor.fetchall()
-        conn.close()
-        
-        return pacientes
+    cursor.execute("""
+        SELECT p.id_paciente, u.cedula, u.nombre, u.apellido, p.fecha_nacimiento, p.historial_medico
+        FROM pacientes p
+        JOIN usuarios u ON p.id_usuario = u.id_usuario
+    """)
 
-    except Error as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener pacientes: {e}")
+    pacientes = cursor.fetchall()
+    conn.close()
+    return pacientes
+
+@app.get("/pacientes/{cedula}")
+def obtener_paciente_por_cedula(cedula: str):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT p.id_paciente, u.cedula, u.nombre, u.apellido, p.fecha_nacimiento, p.historial_medico
+        FROM pacientes p
+        JOIN usuarios u ON p.id_usuario = u.id_usuario
+        WHERE u.cedula = %s
+    """, (cedula,))
+
+    paciente = cursor.fetchone()
+    conn.close()
+
+    if not paciente:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+
+    return paciente
 
 @app.post("/pacientes/{cedula}")
 def crear_paciente(cedula: str, fecha_nacimiento: str, historial_medico: Optional[str]):
@@ -343,7 +391,36 @@ def obtener_citas():
 
     except Error as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener citas: {e}")
+    
+@app.get("/citas/{id_cita}")
+def obtener_cita_por_id(id_cita: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
 
+        cursor.execute("""
+            SELECT c.id_cita, u_p.cedula AS cedula_paciente, u_p.nombre AS nombre_paciente, 
+                   u_m.cedula AS cedula_medico, u_m.nombre AS nombre_medico, 
+                   c.fecha_hora, c.estado, c.notas 
+            FROM citas c
+            JOIN pacientes p ON c.id_paciente = p.id_paciente
+            JOIN usuarios u_p ON p.id_usuario = u_p.id_usuario
+            JOIN medicos m ON c.id_medico = m.id_medico
+            JOIN usuarios u_m ON m.id_usuario = u_m.id_usuario
+            WHERE c.id_cita = %s
+        """, (id_cita,))
+
+        cita = cursor.fetchone()
+        conn.close()
+
+        if not cita:
+            raise HTTPException(status_code=404, detail="Cita no encontrada")
+
+        return cita
+
+    except Error as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener la cita: {e}")
+    
 # Crear una nueva cita usando las cédulas del paciente y del médico
 @app.post("/citas/{cedula_paciente}/{cedula_medico}")
 def crear_cita(cedula_paciente: str, cedula_medico: str, cita: Cita):
@@ -428,3 +505,4 @@ def eliminar_cita(id_cita: int):
 
     except Error as e:
         raise HTTPException(status_code=500, detail=f"Error al eliminar la cita: {e}")
+    
