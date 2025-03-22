@@ -10,17 +10,18 @@ import Doctores from "./components/Doctores";
 import LogIn from "./LogIn"; 
 import Registro from "./Registro"; 
 import Citas from "./pages/Citas"; // Importar la página de Citas
+import Pacientes from "./pages/Pacientes"; 
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const isAuthPage = location.pathname === "/LogIn" || location.pathname === "/Registro";
-  const isCitasPage = location.pathname === "/citas"; // Verifica si está en citas
+  const isNoNavbarPage = location.pathname === "/citas" || location.pathname === "/pacientes";
 
   return (
     <>
-      {!isAuthPage && !isCitasPage && <Navbar />} {/* Oculta Navbar en Citas */}
+      {!isAuthPage && !isNoNavbarPage && <Navbar />} {/* Oculta Navbar en Citas y Pacientes */}
       <main>{children}</main>
-      {!isAuthPage && <Footer />}
+      {!isAuthPage && <Footer />} {/* Footer solo se oculta en login y registro */}
     </>
   );
 };
@@ -46,7 +47,8 @@ const App = () => {
           <Route path="/doctores" element={<Doctores />} />
           <Route path="/login" element={<LogIn />} />
           <Route path="/registro" element={<Registro />} />
-          <Route path="/citas" element={<Citas />} /> {/* Nueva ruta para Citas */}
+          <Route path="/citas" element={<Citas />} />
+          <Route path="/pacientes" element={<Pacientes />} />
           <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
         </Routes>
       </Layout>
@@ -55,4 +57,3 @@ const App = () => {
 };
 
 export default App;
-
