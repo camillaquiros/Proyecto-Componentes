@@ -12,12 +12,13 @@ import Registro from "./Registro";
 import Citas from "./pages/Citas";
 import Pacientes from "./pages/Pacientes";
 import Medicos from "./pages/Medicos";
-import AreasMedicas from "./pages/AreasMedicas"; 
+import AreasMedicas from "./pages/AreasMedicas";
+import Usuarios from "./pages/Usuarios"; 
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const isAuthPage = location.pathname === "/LogIn" || location.pathname === "/Registro";
-  const isNoNavbarPage = ["/citas", "/pacientes", "/medicos", "/areas-medicas"].includes(location.pathname);
+  const isNoNavbarPage = ["/citas", "/pacientes", "/medicos", "/areas-medicas", "/usuarios"].includes(location.pathname);
 
   return (
     <>
@@ -52,7 +53,8 @@ const App = () => {
           <Route path="/citas" element={<Citas />} />
           <Route path="/pacientes" element={<Pacientes />} />
           <Route path="/medicos" element={<Medicos />} />
-          <Route path="/areas-medicas" element={<AreasMedicas />} /> 
+          <Route path="/areas-medicas" element={<AreasMedicas />} />
+          <Route path="/usuarios" element={<Usuarios />} /> 
           <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
         </Routes>
       </Layout>
