@@ -2,24 +2,25 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Sidebar from "./components/sidebar"; // Importar Sidebar
+import Sidebar from "./components/sidebar"; 
 import Inicio from "./components/Inicio";
 import Nosotros from "./components/Nosotros";
 import Servicios from "./components/Servicios";
 import Doctores from "./components/Doctores";
 import LogIn from "./LogIn"; 
 import Registro from "./Registro"; 
-import Citas from "./pages/Citas"; // Importar la página de Citas
-import Pacientes from "./pages/Pacientes"; 
+import Citas from "./pages/Citas";
+import Pacientes from "./pages/Pacientes";
+import Medicos from "./pages/Medicos"; 
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const isAuthPage = location.pathname === "/LogIn" || location.pathname === "/Registro";
-  const isNoNavbarPage = location.pathname === "/citas" || location.pathname === "/pacientes";
+  const isNoNavbarPage = ["/citas", "/pacientes", "/medicos"].includes(location.pathname); // ✅ Ocultar navbar también en /medicos
 
   return (
     <>
-      {!isAuthPage && !isNoNavbarPage && <Navbar />} {/* Oculta Navbar en Citas y Pacientes */}
+      {!isAuthPage && !isNoNavbarPage && <Navbar />}
       <main>{children}</main>
       {!isAuthPage && <Footer />} {/* Footer solo se oculta en login y registro */}
     </>
@@ -49,6 +50,7 @@ const App = () => {
           <Route path="/registro" element={<Registro />} />
           <Route path="/citas" element={<Citas />} />
           <Route path="/pacientes" element={<Pacientes />} />
+          <Route path="/medicos" element={<Medicos />} /> {}
           <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
         </Routes>
       </Layout>
