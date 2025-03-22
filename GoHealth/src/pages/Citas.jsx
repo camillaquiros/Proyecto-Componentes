@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../components/sidebar";
+import { useNavigate } from "react-router-dom"; 
+
 
 const doctors = [
   { name: "Dra. Kris Jenner", especialidad: "Pediatría" },
@@ -18,6 +20,8 @@ const patients = [
   "Sofía Rodríguez",
   "María González",
 ];
+
+
 
 const initialCitas = [
   {
@@ -274,7 +278,7 @@ const Citas = () => {
             </button>
           </div>
         )}
-      </div>
+      </div>   
     </div>
   );
 };

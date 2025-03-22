@@ -15,7 +15,7 @@ const Sidebar = () => {
       </div>
 
       <nav className="flex flex-col gap-4 px-4">
-        <SidebarItem to="/home" icon={<FaHome />} text="Inicio" isOpen={isOpen} />
+        <SidebarItem to="/Home" icon={<FaHome />} text="Inicio" isOpen={isOpen} />
         <SidebarItem to="/citas" icon={<FaCalendarAlt />} text="Citas" isOpen={isOpen} />
         <SidebarItem to="/pacientes" icon={<FaUserInjured />} text="Pacientes" isOpen={isOpen} />
         <SidebarItem to="/medicos" icon={<FaUserMd />} text="Médicos" isOpen={isOpen} />

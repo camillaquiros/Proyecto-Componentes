@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Sidebar from "../components/sidebar";
+import { useNavigate } from "react-router-dom"; 
 
 const initialMedicos = [
   { nombre: "Dra. Kris Jenner", especialidad: "Pediatría", correo: "kris.jenner@gohealth.com" },
