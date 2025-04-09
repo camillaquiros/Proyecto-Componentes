@@ -1,43 +1,49 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Sidebar from "../components/sidebar";
-import { useNavigate } from "react-router-dom"; 
-
-const initialAreas = [
-  { nombre: "Cardiología", descripcion: "Diagnóstico y tratamiento de enfermedades del corazón." },
-  { nombre: "Pediatría", descripcion: "Atención médica para niños y adolescentes." },
-  { nombre: "Ginecología", descripcion: "Salud del sistema reproductor femenino." },
-  { nombre: "Medicina General", descripcion: "Atención médica integral básica." },
-  { nombre: "Neumología", descripcion: "Tratamiento de enfermedades respiratorias." },
-  { nombre: "Ortopedia", descripcion: "Lesiones y trastornos del sistema músculo-esquelético." },
-];
+import { useNavigate } from "react-router-dom";
 
 const AreasMedicas = () => {
-  const [areas, setAreas] = useState(initialAreas);
+  const [areas, setAreas] = useState([]);
   const [search, setSearch] = useState("");
   const [editIndex, setEditIndex] = useState(null);
   const [editForm, setEditForm] = useState({ nombre: "", descripcion: "" });
+  const navigate = useNavigate();
 
-  const navigate = useNavigate(); // ✅ Aquí se define
+  // Obtener áreas médicas desde el backend
+  useEffect(() => {
+    axios.get("http://127.0.0.1:8000/areas/")
+      .then((res) => setAreas(res.data))
+      .catch((err) => console.error("Error al cargar áreas médicas", err));
+  }, []);
 
   const handleEditar = (index) => {
     setEditIndex(index);
     setEditForm({ ...areas[index] });
   };
 
-  const handleEliminar = (index) => {
-    const nuevasAreas = areas.filter((_, i) => i !== index);
-    setAreas(nuevasAreas);
-    setEditIndex(null);
+  const handleEliminar = (nombre) => {
+    axios.delete(`http://127.0.0.1:8000/areas/${nombre}`)
+      .then(() => {
+        setAreas(areas.filter((a) => a.nombre !== nombre));
+        setEditIndex(null);
+      })
+      .catch((err) => console.error("Error al eliminar área", err));
   };
 
   const handleGuardar = () => {
-    const nuevas = [...areas];
-    nuevas[editIndex] = { ...editForm };
-    setAreas(nuevas);
-    setEditIndex(null);
+    const nombreOriginal = areas[editIndex].nombre;
+    axios.put(`http://127.0.0.1:8000/areas/${nombreOriginal}`, editForm)
+      .then(() => {
+        const actualizadas = [...areas];
+        actualizadas[editIndex] = { ...editForm };
+        setAreas(actualizadas);
+        setEditIndex(null);
+      })
+      .catch((err) => console.error("Error al actualizar área", err));
   };
 
-  const areasFiltradas = areas.filter(
+  const filtradas = areas.filter(
     (a) =>
       a.nombre.toLowerCase().includes(search.toLowerCase()) ||
       a.descripcion.toLowerCase().includes(search.toLowerCase())
@@ -66,7 +72,7 @@ const AreasMedicas = () => {
             </tr>
           </thead>
           <tbody>
-            {areasFiltradas.map((a, i) => (
+            {filtradas.map((a, i) => (
               <tr key={i}>
                 <td className="border p-2">{a.nombre}</td>
                 <td className="border p-2">{a.descripcion}</td>
@@ -79,7 +85,7 @@ const AreasMedicas = () => {
                   </button>
                   <button
                     className="bg-red-500 text-white px-3 py-1 rounded"
-                    onClick={() => handleEliminar(i)}
+                    onClick={() => handleEliminar(a.nombre)}
                   >
                     Eliminar
                   </button>
@@ -126,7 +132,6 @@ const AreasMedicas = () => {
         )}
       </div>
 
-      {/* Botón "Regresar" abajo a la izquierda */}
       <button 
         className="absolute bottom-4 left-4 bg-hoverColor text-white px-4 py-2 rounded-md shadow-md
                    hover:bg-gray-600 transition duration-300 ease-in-out"
