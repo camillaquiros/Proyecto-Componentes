@@ -1,48 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Sidebar from "../components/sidebar";
-import { useNavigate } from "react-router-dom"; 
-
-const initialPacientes = [
-  {
-    nombre: "Leonardo Ramos",
-    correo: "leonardo.ramos@example.com",
-    telefono: "88889999",
-    nacimiento: "1990-05-10",
-  },
-  {
-    nombre: "Daniel Leyva",
-    correo: "daniel.leyva@example.com",
-    telefono: "88881111",
-    nacimiento: "1985-11-02",
-  },
-  {
-    nombre: "Ana María López",
-    correo: "ana.lopez@example.com",
-    telefono: "88882222",
-    nacimiento: "1992-03-20",
-  },
-  {
-    nombre: "Carlos Fernández",
-    correo: "carlos.fernandez@example.com",
-    telefono: "88883333",
-    nacimiento: "1988-07-15",
-  },
-  {
-    nombre: "Sofía Rodríguez",
-    correo: "sofia.rodriguez@example.com",
-    telefono: "88884444",
-    nacimiento: "1995-09-25",
-  },
-  {
-    nombre: "María González",
-    correo: "maria.gonzalez@example.com",
-    telefono: "88885555",
-    nacimiento: "1991-12-30",
-  },
-];
 
 const Pacientes = () => {
-  const [pacientes, setPacientes] = useState(initialPacientes);
+  const [pacientes, setPacientes] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const [editForm, setEditForm] = useState({
     nombre: "",
@@ -53,22 +14,50 @@ const Pacientes = () => {
 
   const [search, setSearch] = useState("");
 
+  useEffect(() => {
+    axios.get("http://127.0.0.1:8000/pacientes/")
+      .then((res) => {
+        const data = res.data.map(p => ({
+          nombre: p.nombre,
+          correo: p.email,
+          telefono: p.telefono || "",
+          nacimiento: p.fecha_nacimiento,
+          cedula: p.cedula
+        }));
+        setPacientes(data);
+      })
+      .catch((err) => {
+        console.error("Error al obtener pacientes:", err);
+      });
+  }, []);
+
   const handleEditar = (index) => {
     setEditIndex(index);
     setEditForm({ ...pacientes[index] });
   };
 
   const handleEliminar = (index) => {
-    const nuevos = pacientes.filter((_, i) => i !== index);
-    setPacientes(nuevos);
-    setEditIndex(null);
+    const cedula = pacientes[index].cedula;
+    axios.delete(`http://127.0.0.1:8000/pacientes/${cedula}`)
+      .then(() => {
+        const nuevos = pacientes.filter((_, i) => i !== index);
+        setPacientes(nuevos);
+        setEditIndex(null);
+      })
+      .catch((err) => console.error("Error eliminando paciente:", err));
   };
 
   const handleGuardar = () => {
-    const nuevos = [...pacientes];
-    nuevos[editIndex] = { ...editForm };
-    setPacientes(nuevos);
-    setEditIndex(null);
+    const { cedula, nacimiento, historial_medico } = editForm;
+    axios.put(`http://127.0.0.1:8000/pacientes/${cedula}`, {
+      fecha_nacimiento: nacimiento,
+      historial_medico: historial_medico || ""
+    }).then(() => {
+      const nuevos = [...pacientes];
+      nuevos[editIndex] = { ...editForm };
+      setPacientes(nuevos);
+      setEditIndex(null);
+    }).catch((err) => console.error("Error actualizando paciente:", err));
   };
 
   const filteredPacientes = pacientes.filter((p) => {
@@ -86,18 +75,14 @@ const Pacientes = () => {
       <div className="flex-1 p-6">
         <h1 className="text-3xl font-bold mb-6">Pacientes</h1>
 
-        {/* Filtro */}
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Buscar por nombre, correo o teléfono"
-            className="border p-2 rounded w-1/3"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <input
+          type="text"
+          placeholder="Buscar por nombre, correo o teléfono"
+          className="border p-2 rounded w-1/3 mb-4"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
 
-        {/* Tabla */}
         <table className="w-full border-collapse border">
           <thead>
             <tr className="bg-gray-200">
@@ -134,7 +119,6 @@ const Pacientes = () => {
           </tbody>
         </table>
 
-        {/* Formulario de edición */}
         {editIndex !== null && (
           <div className="mt-6 border p-4 rounded bg-gray-50">
             <h2 className="text-xl font-semibold mb-4">Editar Paciente</h2>
@@ -143,25 +127,19 @@ const Pacientes = () => {
                 className="border p-2 rounded w-1/4"
                 placeholder="Nombre"
                 value={editForm.nombre}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, nombre: e.target.value })
-                }
+                disabled
               />
               <input
                 className="border p-2 rounded w-1/4"
                 placeholder="Correo"
                 value={editForm.correo}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, correo: e.target.value })
-                }
+                disabled
               />
               <input
                 className="border p-2 rounded w-1/4"
                 placeholder="Teléfono"
                 value={editForm.telefono}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, telefono: e.target.value })
-                }
+                disabled
               />
               <input
                 type="date"
