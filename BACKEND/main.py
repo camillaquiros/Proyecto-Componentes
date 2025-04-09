@@ -24,7 +24,7 @@ def get_db_connection():
         conn = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="Pama2702",  
+            password="Samy1904",  
             database="gestioncitasmedicas"
         )
         return conn
@@ -92,14 +92,12 @@ def login_usuario(login_data: LoginRequest):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
-    # Buscar el usuario por email
     cursor.execute("SELECT contrasena FROM usuarios WHERE email = %s", (login_data.email,))
     usuario = cursor.fetchone()
     
     conn.close()
 
     if usuario:
-        # Comparar contraseñas
         if usuario["contrasena"] == login_data.contrasena:
             return {"mensaje": "Acceso aprobado"}
         else:
@@ -136,7 +134,6 @@ def crear_usuario(usuario: Usuario):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Verificar si el email o la cédula ya existen
     cursor.execute("SELECT id_usuario FROM usuarios WHERE email = %s OR cedula = %s", (usuario.email, usuario.cedula))
     if cursor.fetchone():
         conn.close()
@@ -215,7 +212,6 @@ def crear_medico(cedula: str, especialidad: str):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Obtener el id_usuario a partir de la cédula
     cursor.execute("SELECT id_usuario FROM usuarios WHERE cedula = %s", (cedula,))
     usuario = cursor.fetchone()
     
@@ -428,7 +424,6 @@ def crear_cita(cedula_paciente: str, cedula_medico: str, cita: Cita):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Obtener id_paciente desde la cedula
         cursor.execute("""
             SELECT p.id_paciente FROM pacientes p
             JOIN usuarios u ON p.id_usuario = u.id_usuario
@@ -440,7 +435,6 @@ def crear_cita(cedula_paciente: str, cedula_medico: str, cita: Cita):
             conn.close()
             raise HTTPException(status_code=404, detail="Paciente no encontrado")
 
-        # Obtener id_medico desde la cedula
         cursor.execute("""
             SELECT m.id_medico FROM medicos m
             JOIN usuarios u ON m.id_usuario = u.id_usuario
@@ -452,7 +446,6 @@ def crear_cita(cedula_paciente: str, cedula_medico: str, cita: Cita):
             conn.close()
             raise HTTPException(status_code=404, detail="Médico no encontrado")
 
-        # Insertar la nueva cita
         sql = """
             INSERT INTO citas (id_paciente, id_medico, fecha_hora, estado, notas)
             VALUES (%s, %s, %s, %s, %s)
@@ -468,7 +461,6 @@ def crear_cita(cedula_paciente: str, cedula_medico: str, cita: Cita):
     except Error as e:
         raise HTTPException(status_code=500, detail=f"Error al crear la cita: {e}")
 
-# Actualizar una cita por su ID
 @app.put("/citas/{id_cita}")
 def actualizar_cita(id_cita: int, cita: Cita):
     try:
@@ -490,7 +482,6 @@ def actualizar_cita(id_cita: int, cita: Cita):
     except Error as e:
         raise HTTPException(status_code=500, detail=f"Error al actualizar la cita: {e}")
 
-# Eliminar una cita por su ID
 @app.delete("/citas/{id_cita}")
 def eliminar_cita(id_cita: int):
     try:

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Sidebar from "../components/sidebar";
+import { useNavigate } from "react-router-dom"; 
 
 const initialAreas = [
   { nombre: "Cardiología", descripcion: "Diagnóstico y tratamiento de enfermedades del corazón." },
@@ -15,6 +16,8 @@ const AreasMedicas = () => {
   const [search, setSearch] = useState("");
   const [editIndex, setEditIndex] = useState(null);
   const [editForm, setEditForm] = useState({ nombre: "", descripcion: "" });
+
+  const navigate = useNavigate(); // ✅ Aquí se define
 
   const handleEditar = (index) => {
     setEditIndex(index);
@@ -41,7 +44,7 @@ const AreasMedicas = () => {
   );
 
   return (
-    <div className="flex">
+    <div className="flex relative min-h-screen">
       <Sidebar />
       <div className="flex-1 p-6">
         <h1 className="text-3xl font-bold mb-6">Áreas Médicas</h1>
@@ -122,6 +125,15 @@ const AreasMedicas = () => {
           </div>
         )}
       </div>
+
+      {/* Botón "Regresar" abajo a la izquierda */}
+      <button 
+        className="absolute bottom-4 left-4 bg-hoverColor text-white px-4 py-2 rounded-md shadow-md
+                   hover:bg-gray-600 transition duration-300 ease-in-out"
+        onClick={() => navigate("/LogIn")}
+      >
+        ← Regresar
+      </button>
     </div>
   );
 };

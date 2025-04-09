@@ -17,12 +17,13 @@ import Usuarios from "./pages/Usuarios";
 
 const Layout = ({ children }) => {
   const location = useLocation();
-  const isAuthPage = location.pathname === "/LogIn" || location.pathname === "/Registro";
-  const isNoNavbarPage = ["/citas", "/pacientes", "/medicos", "/areas-medicas", "/usuarios"].includes(location.pathname);
+  const isAuthPage = location.pathname === "/LogIn" || location.pathname === "/Registro" || location.pathname === "/citas" || location.pathname === "/pacientes" || location.pathname === "/medicos"
+  || location.pathname === "/areas-medicas" || location.pathname === "/usuarios";
+  
 
   return (
     <>
-      {!isAuthPage && !isNoNavbarPage && <Navbar />}
+      {!isAuthPage && <Navbar />}
       <main>{children}</main>
       {!isAuthPage && <Footer />}
     </>
