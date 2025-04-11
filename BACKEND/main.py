@@ -24,7 +24,7 @@ def get_db_connection():
         conn = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="Cmqt1234",  
+            password="Samy1904",  
             database="gestioncitasmedicas"
         )
         return conn
@@ -36,7 +36,7 @@ class Usuario(BaseModel):
     nombre: str
     apellido: str
     email: str
-    telefono: Optional[str]
+    telefono: str
     contrasena: str
     rol: str
     cedula: str  
@@ -496,4 +496,3 @@ def eliminar_cita(id_cita: int):
 
     except Error as e:
         raise HTTPException(status_code=500, detail=f"Error al eliminar la cita: {e}")
-    

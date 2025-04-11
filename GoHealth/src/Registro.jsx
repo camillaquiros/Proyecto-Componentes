@@ -16,7 +16,7 @@ function Registro() {
                 nombre: data.nombre,
                 apellido: data.apellido,
                 email: data.email,
-                telefono: "", // Si decides usarlo luego
+                telefono: data.telefono, // Si decides usarlo luego
                 contrasena: data.password,
                 rol: "Paciente", // Asegúrate que coincida con tu ENUM en la BD
                 cedula: data.cedula
@@ -102,6 +102,26 @@ function Registro() {
                         />
                         {errors.cedula && <p className='text-red-500 font-medium text-sm'>{errors.cedula.message}</p>}
                     </div>
+
+                    <div className='flex flex-col gap-2'>
+    <label htmlFor='telefono' className='text-sm text-slate-700 font-semibold'>Teléfono</label>
+    <input
+        type='tel'
+        id='telefono'
+        {...register("telefono", {
+            required: "El teléfono es requerido",
+            minLength: { value: 8, message: "Debe tener 8 dígitos" },
+            maxLength: { value: 8, message: "Debe tener 8 dígitos" }
+        })}
+        className={`border-2 rounded-sm px-2 py-3 text-sm outline-none font-medium text-slate-600 ${errors.telefono ? 'border-red-500' : 'border-[#007575]'}`}
+        placeholder='Tu teléfono'
+        onInput={(e) => {
+            if (e.target.value.length > 8) e.target.value = e.target.value.slice(0, 8);
+        }}
+    />
+    {errors.telefono && <p className='text-red-500 font-medium text-sm'>{errors.telefono.message}</p>}
+</div>
+
 
                     <div className='flex flex-col gap-2'>
                         <label htmlFor='email' className='text-sm text-slate-700 font-semibold'>Correo Electrónico</label>
