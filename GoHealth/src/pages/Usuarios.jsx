@@ -59,7 +59,7 @@ const Usuarios = () => {
                 <td className="border p-2">{u.apellido}</td>
                 <td className="border p-2">{u.email}</td>
                 <td className="border p-2">{u.rol}</td>
-                <td className="border p-2">{u.telefono || "-"}</td>
+                <td className="border p-2">{u.telefono}</td>
                 <td className="border p-2">{u.cedula}</td>
                 <td className="border p-2">
                   <button
