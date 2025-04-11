@@ -7,9 +7,9 @@ const Pacientes = () => {
   const [editIndex, setEditIndex] = useState(null);
   const [editForm, setEditForm] = useState({
     nombre: "",
-    correo: "",
-    telefono: "",
+    apellido: "",
     nacimiento: "",
+    historial_medico: "",
   });
 
   const [search, setSearch] = useState("");
@@ -18,11 +18,12 @@ const Pacientes = () => {
     axios.get("http://127.0.0.1:8000/pacientes/")
       .then((res) => {
         const data = res.data.map(p => ({
+          id: p.id_paciente,
+          cedula: p.cedula,
           nombre: p.nombre,
-          correo: p.email,
-          telefono: p.telefono || "",
+          apellido: p.apellido,
           nacimiento: p.fecha_nacimiento,
-          cedula: p.cedula
+          historial_medico: p.historial_medico
         }));
         setPacientes(data);
       })
@@ -64,8 +65,8 @@ const Pacientes = () => {
     const s = search.toLowerCase();
     return (
       p.nombre.toLowerCase().includes(s) ||
-      p.correo.toLowerCase().includes(s) ||
-      p.telefono.includes(s)
+      p.apellido.toLowerCase().includes(s) ||
+      p.cedula.includes(s)
     );
   });
 
@@ -77,7 +78,7 @@ const Pacientes = () => {
 
         <input
           type="text"
-          placeholder="Buscar por nombre, correo o teléfono"
+          placeholder="Buscar por nombre, apellido o cédula"
           className="border p-2 rounded w-1/3 mb-4"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -87,9 +88,10 @@ const Pacientes = () => {
           <thead>
             <tr className="bg-gray-200">
               <th className="border p-2">Nombre</th>
-              <th className="border p-2">Correo</th>
-              <th className="border p-2">Teléfono</th>
+              <th className="border p-2">Apellido</th>
+              <th className="border p-2">Cédula</th>
               <th className="border p-2">Nacimiento</th>
+              <th className="border p-2">Historial Médico</th>
               <th className="border p-2">Acciones</th>
             </tr>
           </thead>
@@ -97,9 +99,10 @@ const Pacientes = () => {
             {filteredPacientes.map((p, i) => (
               <tr key={i}>
                 <td className="border p-2">{p.nombre}</td>
-                <td className="border p-2">{p.correo}</td>
-                <td className="border p-2">{p.telefono}</td>
+                <td className="border p-2">{p.apellido}</td>
+                <td className="border p-2">{p.cedula}</td>
                 <td className="border p-2">{p.nacimiento}</td>
+                <td className="border p-2">{p.historial_medico}</td>
                 <td className="border p-2 flex gap-2">
                   <button
                     className="bg-yellow-500 text-white px-3 py-1 rounded"
@@ -131,14 +134,14 @@ const Pacientes = () => {
               />
               <input
                 className="border p-2 rounded w-1/4"
-                placeholder="Correo"
-                value={editForm.correo}
+                placeholder="Apellido"
+                value={editForm.apellido}
                 disabled
               />
               <input
                 className="border p-2 rounded w-1/4"
-                placeholder="Teléfono"
-                value={editForm.telefono}
+                placeholder="Cédula"
+                value={editForm.cedula}
                 disabled
               />
               <input
@@ -150,6 +153,15 @@ const Pacientes = () => {
                 }
               />
             </div>
+            <textarea
+              className="border p-2 rounded w-full mb-3"
+              rows={3}
+              placeholder="Historial médico"
+              value={editForm.historial_medico}
+              onChange={(e) =>
+                setEditForm({ ...editForm, historial_medico: e.target.value })
+              }
+            />
             <button
               className="bg-green-600 text-white px-4 py-2 rounded"
               onClick={handleGuardar}

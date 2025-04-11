@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import Sidebar from "../components/sidebar";
 import { useNavigate } from "react-router-dom";
 
@@ -10,11 +9,16 @@ const AreasMedicas = () => {
   const [editForm, setEditForm] = useState({ nombre: "", descripcion: "" });
   const navigate = useNavigate();
 
-  // Obtener áreas médicas desde el backend
+  // Cargar datos quemados
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/areas/")
-      .then((res) => setAreas(res.data))
-      .catch((err) => console.error("Error al cargar áreas médicas", err));
+    const datosQuemados = [
+      { nombre: "Cardiología", descripcion: "Atención del corazón y sistema circulatorio" },
+      { nombre: "Pediatría", descripcion: "Cuidado de la salud infantil" },
+      { nombre: "Ginecología", descripcion: "Salud reproductiva femenina" },
+      { nombre: "Dermatología", descripcion: "Diagnóstico y tratamiento de la piel" },
+      { nombre: "Neurología", descripcion: "Trastornos del sistema nervioso" },
+    ];
+    setAreas(datosQuemados);
   }, []);
 
   const handleEditar = (index) => {
@@ -23,24 +27,15 @@ const AreasMedicas = () => {
   };
 
   const handleEliminar = (nombre) => {
-    axios.delete(`http://127.0.0.1:8000/areas/${nombre}`)
-      .then(() => {
-        setAreas(areas.filter((a) => a.nombre !== nombre));
-        setEditIndex(null);
-      })
-      .catch((err) => console.error("Error al eliminar área", err));
+    setAreas(areas.filter((a) => a.nombre !== nombre));
+    setEditIndex(null);
   };
 
   const handleGuardar = () => {
-    const nombreOriginal = areas[editIndex].nombre;
-    axios.put(`http://127.0.0.1:8000/areas/${nombreOriginal}`, editForm)
-      .then(() => {
-        const actualizadas = [...areas];
-        actualizadas[editIndex] = { ...editForm };
-        setAreas(actualizadas);
-        setEditIndex(null);
-      })
-      .catch((err) => console.error("Error al actualizar área", err));
+    const actualizadas = [...areas];
+    actualizadas[editIndex] = { ...editForm };
+    setAreas(actualizadas);
+    setEditIndex(null);
   };
 
   const filtradas = areas.filter(

@@ -11,6 +11,16 @@ const Citas = () => {
     estado: "",
     notas: "",
   });
+  const [crearForm, setCrearForm] = useState({
+    id_paciente: "",
+    id_medico: "",
+    fecha_hora: "",
+    estado: "Pendiente",
+    notas: ""
+  });
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [pacientesDisponibles, setPacientesDisponibles] = useState([]);
+  const [medicosDisponibles, setMedicosDisponibles] = useState([]);
 
   const fetchCitas = () => {
     axios.get("http://127.0.0.1:8000/citas/")
@@ -20,6 +30,14 @@ const Citas = () => {
 
   useEffect(() => {
     fetchCitas();
+
+    axios.get("http://127.0.0.1:8000/pacientes/")
+      .then((res) => setPacientesDisponibles(res.data))
+      .catch((err) => console.error("Error al obtener pacientes:", err));
+
+    axios.get("http://127.0.0.1:8000/medicos/")
+      .then((res) => setMedicosDisponibles(res.data))
+      .catch((err) => console.error("Error al obtener médicos:", err));
   }, []);
 
   const handleEliminar = (id_cita) => {
@@ -32,7 +50,7 @@ const Citas = () => {
     setEditIndex(index);
     const cita = citas[index];
     setEditForm({
-      fecha_hora: cita.fecha_hora.slice(0, 16), // para datetime-local
+      fecha_hora: cita.fecha_hora.slice(0, 16),
       estado: cita.estado,
       notas: cita.notas || "",
     });
@@ -46,6 +64,38 @@ const Citas = () => {
         setEditIndex(null);
       })
       .catch((err) => console.error(err));
+  };
+
+  const handleCrear = () => {
+    const paciente = pacientesDisponibles.find(p => p.id_paciente == crearForm.id_paciente);
+    const medico = medicosDisponibles.find(m => m.id_medico == crearForm.id_medico);
+    const cedulaPaciente = paciente?.cedula;
+    const cedulaMedico = medico?.cedula;
+
+    if (!cedulaPaciente || !cedulaMedico) {
+      alert("Error: Cédula del paciente o médico no encontrada.");
+      return;
+    }
+
+    const fechaFormateada = crearForm.fecha_hora.replace("T", " ") + ":00";
+
+    axios.post(`http://127.0.0.1:8000/citas/${cedulaPaciente}/${cedulaMedico}`, {
+      fecha_hora: fechaFormateada,
+      estado: crearForm.estado,
+      notas: crearForm.notas
+    })
+      .then(() => {
+        fetchCitas();
+        setCrearForm({
+          id_paciente: "",
+          id_medico: "",
+          fecha_hora: "",
+          estado: "Pendiente",
+          notas: ""
+        });
+        setMostrarFormulario(false);
+      })
+      .catch((err) => console.error("Error al crear cita:", err));
   };
 
   const filtradas = citas.filter((c) => {
@@ -63,13 +113,21 @@ const Citas = () => {
       <div className="flex-1 p-6">
         <h1 className="text-3xl font-bold mb-6">Citas</h1>
 
-        <input
-          type="text"
-          placeholder="Buscar por paciente, médico o estado"
-          className="border p-2 rounded mb-4 w-1/3"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="flex justify-between items-center mb-4">
+          <input
+            type="text"
+            placeholder="Buscar por paciente, médico o estado"
+            className="border p-2 rounded w-1/3"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+            onClick={() => setMostrarFormulario(!mostrarFormulario)}
+          >
+            {mostrarFormulario ? "Cancelar" : "Crear Cita"}
+          </button>
+        </div>
 
         <table className="w-full border-collapse border">
           <thead>
@@ -154,6 +212,79 @@ const Citas = () => {
               onClick={() => setEditIndex(null)}
             >
               Cancelar
+            </button>
+          </div>
+        )}
+
+        {mostrarFormulario && (
+          <div className="mt-6 border p-4 rounded bg-gray-50">
+            <h2 className="text-xl font-semibold mb-4">Crear Nueva Cita</h2>
+            <div className="flex gap-3 mb-3">
+              <select
+                className="border p-2 rounded w-1/4"
+                value={crearForm.id_paciente}
+                onChange={(e) =>
+                  setCrearForm({ ...crearForm, id_paciente: e.target.value })
+                }
+              >
+                <option value="">Seleccione paciente</option>
+                {pacientesDisponibles.map((p) => (
+                  <option key={p.id_paciente} value={p.id_paciente}>
+                    {p.nombre} {p.apellido}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className="border p-2 rounded w-1/4"
+                value={crearForm.id_medico}
+                onChange={(e) =>
+                  setCrearForm({ ...crearForm, id_medico: e.target.value })
+                }
+              >
+                <option value="">Seleccione médico</option>
+                {medicosDisponibles.map((m) => (
+                  <option key={m.id_medico} value={m.id_medico}>
+                    {m.nombre} {m.apellido}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="datetime-local"
+                className="border p-2 rounded w-1/4"
+                value={crearForm.fecha_hora}
+                onChange={(e) =>
+                  setCrearForm({ ...crearForm, fecha_hora: e.target.value })
+                }
+              />
+              <select
+                className="border p-2 rounded w-1/4"
+                value={crearForm.estado}
+                onChange={(e) =>
+                  setCrearForm({ ...crearForm, estado: e.target.value })
+                }
+              >
+                <option value="Pendiente">Pendiente</option>
+                <option value="Confirmada">Confirmada</option>
+                <option value="Cancelada">Cancelada</option>
+                <option value="Completada">Completada</option>
+              </select>
+            </div>
+            <input
+              type="text"
+              className="border p-2 rounded w-full mb-3"
+              placeholder="Notas"
+              value={crearForm.notas}
+              onChange={(e) =>
+                setCrearForm({ ...crearForm, notas: e.target.value })
+              }
+            />
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+              onClick={handleCrear}
+            >
+              Crear Cita
             </button>
           </div>
         )}
