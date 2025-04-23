@@ -22,10 +22,11 @@ app.add_middleware(
 def get_db_connection():
     try:
         conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="Cmqt1234",  
-            database="gestioncitasmedicas"
+            host="gestioncitasmedicascenfo2024.mysql.database.azure.com",
+            user="usuarioadmin@gestioncitasmedicascenfo2024",
+            password="Cenfotec2024",
+            database="gestioncitasmedicas",
+            ssl_disabled=True   # <-- ¡AQUÍ!
         )
         return conn
     except Error as e:
